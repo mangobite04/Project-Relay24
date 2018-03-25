@@ -1,0 +1,47 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  
+  "Parameters": {
+
+    "Ec2Instance" : {
+      "Type" : "List<AWS::EC2::Instance::Id>",
+      "Description" : "Ec2 Instance ID",
+      "ConstraintDescription" : "must be the Instance Id of an existing Virtual Private Cloud."
+    },
+
+    "SSHLocation" : {
+      "Description" : "The IP address range that can be used to SSH to the EC2 instances",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+    }
+  },
+
+
+  "Resources" : {
+    "ElasticLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "AvailabilityZones" : { "Fn::GetAZs" : "" },
+		"Scheme" : "internet-facing",
+		"CrossZone": "True",
+        "Instances" : { "Ref" : "Ec2Instance" },
+		"Listeners" : [ {
+          "LoadBalancerPort" : "80",
+          "InstancePort": "80",
+          "Protocol" : "HTTP"
+        } ],
+        "HealthCheck" : {
+          "Target": "HTTP:80/",
+          "HealthyThreshold" : "3",
+          "UnhealthyThreshold" : "5",
+          "Interval" : "30",
+          "Timeout" : "5"
+        }
+      }
+    }
+}
+}
